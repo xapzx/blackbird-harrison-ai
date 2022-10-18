@@ -12,14 +12,44 @@ import logo from '../../assets/logo.svg';
 
 export default function LoginForm() {
   const [showAlert, setShowAlert] = useState(false);
+  const [emailError, setEmailError] = useState(false);
+  const [passwordError, setPasswordError] = useState(false);
   const validateForm = (event) => {
     event.preventDefault()
     const data = new FormData(event.currentTarget);
     const email = data.get('email');
     const password = data.get('password');
+    var passwordFlag = false;
 
     // Add validation code here
-
+    // Validate email address
+    var validator = require("email-validator");
+    if (!validator.validate(email)) {
+      setEmailError(true);
+    } else {
+      setEmailError(false);
+    }
+    
+    // Validate password
+    if(password.length < 8) {
+      setPasswordError("Password should be 8 or more characters");
+    } else if(!password.match(new RegExp("^(?=.*[a-z])(?=.*[A-Z])"))) {
+      setPasswordError("Password should contain both uppercase and lowercase letters");
+    } else if(!password.match(new RegExp("^(?=.*[0-9])"))) {
+      setPasswordError("Password should contain atleast one number");
+    } else if(!password.match(new RegExp("^(?=.*[!@#$%^&*])"))) {
+      setPasswordError("Password should contain atleast one special character");
+    }else {
+      setPasswordError(false);
+      passwordFlag = true;
+    }
+    
+    if(validator.validate(email) && passwordFlag) {
+      setEmailError(false);
+      setPasswordError(false);
+      passwordFlag = false;
+      setShowAlert("Login Successful");
+    }
   }
 
   const handleSubmit = (event) => {
@@ -30,7 +60,6 @@ export default function LoginForm() {
       password: data.get('password'),
     });
     validateForm(event);
-    setShowAlert("Login Successful");
   };
 
   return (
@@ -87,6 +116,9 @@ export default function LoginForm() {
               name="email"
               autoComplete="email"
               autoFocus
+              error={emailError}
+              helperText={emailError ? "Please enter valid email address" : ""}
+              inputProps={{ "data-testid": "invalid-email" }}
             />
             <TextField
               margin="normal"
@@ -97,6 +129,9 @@ export default function LoginForm() {
               type="password"
               id="password"
               autoComplete="current-password"
+              error={passwordError}
+              helperText={passwordError ? passwordError : ""}
+              inputProps={{ "data-testid": "invalid-password" }}
             />
             <Button
               type="submit"
